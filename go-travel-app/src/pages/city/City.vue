@@ -12,8 +12,19 @@
         <input 
           placeholder="输入城市名或拼音" 
           type="text" 
-          class="search-input">
+          class="search-input"
+          v-model="keyword">
       </div>
+    </div>
+    <div ref="searchWrapper">
+      <ul class="search-list" v-show="showSearchList">
+        <li 
+          class="search-item" 
+          v-for="(item, index) in searchedCityList" 
+          :key="index"
+          @click="chooseCity(item.name)">{{ item.name }}</li>
+        <li v-show="isNoData" class="search-item">没有搜索结果</li>
+      </ul>
     </div>
     <div class="city-content" ref="wrapper">
       <div class="content">
@@ -25,7 +36,11 @@
           <div class="place">
             <div class="banner">当前城市</div>
             <div class="cities">
-              <div class="city" v-for="city in hotCities" :key="city.id">{{ city.name }}</div>
+              <div 
+                class="city" 
+                v-for="city in hotCities" 
+                :key="city.id"
+                @click="handleChangeCity(city.name)">{{ city.name }}</div>
             </div>
           </div>
           <div class="place" v-for="(city, key) in cities" :key="key">
@@ -33,7 +48,11 @@
               class="banner"
               :ref="key">{{ key }}</div>
             <ul class="city-list">
-              <li class="city-item" v-for="item in city" :key="item.id">{{ item.name }}</li>
+              <li 
+                class="city-item" 
+                v-for="item in city" 
+                :key="item.id"
+                @click="handleChangeCity(item.name)">{{ item.name }}</li>
             </ul>
           </div>
         </div>
@@ -54,6 +73,7 @@
 
 <script>
   import { getRequestData } from '../../common/js/requestData'
+  import { mapMutations } from 'vuex'
   import BScroll from 'better-scroll'
   import {
     mapState
@@ -62,10 +82,13 @@
     name: 'City',
     data() {
       return {
+        keyword: '',
         cities: {},
         hotCities: [],
         touchStatus: false,
-        letter: ''
+        letter: '',
+        searchedCityList: [],
+        isNoData: false
       }
     },
     watch: {
@@ -74,14 +97,45 @@
           const element = this.$refs[this.letter][0]
           this.scroll.scrollToElement(element)
         }
+      },
+      keyword() {
+        let list = []
+        if (this.keyword === '') {
+          this.searchedCityList = []
+          return
+        }
+        for (let key in this.cities) {
+          this.cities[key].forEach((city, index) => {
+            if (city.name.indexOf(this.keyword) > -1 || city.spell.indexOf(this.keyword) > -1) {
+              list.push(city)
+            }
+          })
+        }
+        if (this.keyword.length !== 0 && list.length === 0) {
+          this.isNoData = true
+        } else {
+          this.isNoData = false
+        }
+        console.log(this.isNoData)
+        this.searchedCityList = list
       }
     },
     methods: {
+      ...mapMutations(['changeCity']),
       goToHome() {
         this.$router.push('/')
       },
       goToAlphabetCity(letter) {
         this.letter = letter
+      },
+      chooseCity(city) {
+        this.changeCity(city)
+        this.keyword = ''
+        this.$router.push('/')
+      },
+      handleChangeCity(city) {
+        this.changeCity(city)
+        this.$router.push('/')
       },
       handleTouchStart() {
         this.touchStatus = true
@@ -119,11 +173,15 @@
           letters.push(key)
         }
         return letters
+      },
+      showSearchList() {
+        return this.searchedCityList.length || this.isNoData
       }
     },
     mounted() {
       this._getData('/api/city.json')
       this.scroll = new BScroll(this.$refs.wrapper)
+      // this.searchScroll = new BScroll(this.$refs.searchWrapper)
     }
   }
 </script>
@@ -151,6 +209,7 @@
           flex 0 0 35px
       .search
         margin 3px 10px 0 10px
+        position relative
         .search-input
           height 28px
           display inline-block
@@ -160,6 +219,18 @@
           color #666
           font-size 12px
           padding 0 10px
+    .search-list
+      position absolute
+      top 70px
+      left 0
+      right 0
+      bottom 0
+      z-index 10
+      background #eee
+      .search-item
+        padding 10px
+        border-bottom 1px solid #eee
+        background #fff
     .city-content
       position absolute
       top 70px

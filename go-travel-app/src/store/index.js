@@ -8,7 +8,9 @@ const store = new Vuex.Store({
     city: '苏州'
   },
   mutations: {
-
+    changeCity(state, city) {
+      state.city = city
+    }
   }
 })
 
