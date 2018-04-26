@@ -35,7 +35,6 @@
     mounted() {
       getRequestData('/api/index.json').then(res => {
         res = res.data
-        console.log(res);
         if (res.ret && res.data) {
           const data = res.data
           this.swiperList = data.swiperList
