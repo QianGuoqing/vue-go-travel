@@ -88,7 +88,8 @@
         touchStatus: false,
         letter: '',
         searchedCityList: [],
-        isNoData: false
+        isNoData: false,
+        timer: null
       }
     },
     watch: {
@@ -142,12 +143,17 @@
       },
       handleTouchMove(e) {
         if (this.touchStatus) {
-          let startY = this.$refs['A'][0].offsetTop
-          let moveY = e.touches[0].clientY
-          let alphabetIndex = Math.ceil(((moveY - startY) / 20)) + 2
-          if (alphabetIndex >= 0 && alphabetIndex < this.letters.length) {
-            this.scroll.scrollToElement(this.$refs[this.letters[alphabetIndex]][0])
+          if (this.timer) {
+            clearInterval(this.timer)
           }
+          this.timer = setTimeout(() => {
+            let startY = this.$refs['A'][0].offsetTop
+            let moveY = e.touches[0].clientY
+            let alphabetIndex = Math.ceil(((moveY - startY) / 20)) + 2
+            if (alphabetIndex >= 0 && alphabetIndex < this.letters.length) {
+              this.scroll.scrollToElement(this.$refs[this.letters[alphabetIndex]][0])
+            }
+          }, 16);
         }
       },
       handleTouchEnd() {
